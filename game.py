@@ -4,7 +4,7 @@ import pygame, random
 class Game:
     def __init__(self, screen):
         self.screen = screen
-        self.background_color = 'black'
+        self.background_color = 'gray'
 
 
         # colors
@@ -23,30 +23,48 @@ class Game:
         self.rect_size2 = 100
         self.rect_height1 = self.screen.get_height()*1/3 - self.rect_size1/2
         self.rect_height2 = self.screen.get_height()*2/3
+        self.primary_rects = []
         self.rects = []
+
+        self.create_colors()
+        self.blend_colors()
+        self.create_rect()
 
     def update(self):
         self.screen.fill(self.background_color)
         if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
-            pygame.draw.rect(self.screen, self.color1, self.rect1.rect)
-            pygame.draw.rect(self.screen, self.color2, self.rect2.rect)
+            for r in self.primary_rects:
+                pygame.draw.rect(self.screen, 'black', r.rect_extend)
+                pygame.draw.rect(self.screen, r.color, r.rect)
             for r in self.rects:
+                pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
                 pygame.draw.rect(self.screen, r.color, r.rect)
 
     def create_rect(self):
-        self.rect1 = Rectangle(self.screen.get_width()*1/3-self.rect_size1/2, self.rect_height1, self.rect_size1, self.rect_size1, self.color1)
-        self.rect2 = Rectangle(self.screen.get_width() * 2 / 3 - self.rect_size1/2, self.rect_height1,
-                                      self.rect_size1, self.rect_size1, self.color2)
-        a = self.screen.get_width() * 1/16
+        self.primary_rects = []
+        self.rects = []
+        self.primary_rects.append(Rectangle(self.screen.get_width()*1/3-self.rect_size1/2, self.rect_height1, self.rect_size1, self.rect_size1, self.color1))
+        self.primary_rects.append(Rectangle(self.screen.get_width() * 2 / 3 - self.rect_size1/2, self.rect_height1,
+                                      self.rect_size1, self.rect_size1, self.color2))
+        if len(self.colors_blended) > 2:
+            a = self.screen.get_width() * 1/len(self.colors_blended)**2
+        elif len(self.colors_blended) == 2:
+            a = self.screen.get_width() * 1/3 - self.rect_size2/2
+        else:
+            a = self.screen.get_width()/2 - self.rect_size2/2
         for c in self.colors_blended:
-            self.rects.append(Rectangle(a, self.rect_height2, self.rect_size2, self.rect_size2, c))
-            a += self.screen.get_width() * 1/4
-
+            if c == self.blend_color:
+                self.blend_rect = Rectangle(a, self.rect_height2, self.rect_size2, self.rect_size2, c)
+                self.rects.append(self.blend_rect)
+            else:
+                self.rects.append(Rectangle(a, self.rect_height2, self.rect_size2, self.rect_size2, c))
+            a += self.screen.get_width() * 1/len(self.colors_blended)
+            if len(self.colors_blended) == 2:
+                a = self.screen.get_width() * 2/3 - self.rect_size2/2
 
 
     def create_colors(self):
         self.mode = random.choice(self.modes)
-        # self.mode = 'CMY'
         if self.mode == 'RGB':
             R = 0
             G = 0
@@ -107,7 +125,6 @@ class Game:
             self.color1 = color1
             self.color2 = color2
 
-
     def blend_colors(self):
         self.colors_blended = []
         blend_color = []
@@ -143,8 +160,21 @@ class Game:
             self.colors_blended.append(fake_color)
         self.colors_blended.insert(random.randint(0, 2), self.blend_color)
 
+    def show_result(self):
+        self.primary_rects = [Rectangle(self.screen.get_width()/2-self.rect_size1/2, self.rect_height1, self.rect_size1, self.rect_size1, self.blend_color)]
+
+
 class Rectangle:
     def __init__(self, left, top, width, height, color):
-        self.rect = pygame.rect.Rect(left, top, width, height)
+        self.rect_initial = pygame.rect.Rect(left, top, width, height)
+        self.rect_extend = pygame.rect.Rect(left-5, top-5, width+10, height+10)
+        self.rect = self.rect_initial.copy()
         self.color = color
+
+    def extend(self):
+        self.rect = self.rect_extend.copy()
+
+    def set_initial_rect(self):
+        self.rect = self.rect_initial.copy()
+
 
