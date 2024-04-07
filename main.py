@@ -25,6 +25,7 @@ while running:
         elif ev.type == pygame.KEYDOWN:
             g.create_colors()
             g.blend_colors()
+            g.create_rect()
     clock.tick(FPS)
 
 pygame.quit()

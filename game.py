@@ -1,9 +1,11 @@
 import pygame, random
 
+
 class Game:
     def __init__(self, screen):
         self.screen = screen
         self.background_color = 'black'
+
 
         # colors
         self.DOMINANT_VARIABLE = (150, 255)
@@ -12,15 +14,33 @@ class Game:
         self.color1 = []
         self.color2 = []
         self.blend_color = []
+        self.colors_blended = []
         self.modes = ('RGB', 'CMY')
         self.mode = ''
+
+        # Rect
+        self.rect_size1 = 200
+        self.rect_size2 = 100
+        self.rect_height1 = self.screen.get_height()*1/3 - self.rect_size1/2
+        self.rect_height2 = self.screen.get_height()*2/3
+        self.rects = []
 
     def update(self):
         self.screen.fill(self.background_color)
         if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
-            pygame.draw.rect(self.screen, self.color1, (0, 0, 100, 100))
-            pygame.draw.rect(self.screen, self.color2, (300, 0, 100, 100))
-            pygame.draw.rect(self.screen, self.blend_color, (150, 150, 100, 100))
+            pygame.draw.rect(self.screen, self.color1, self.rect1.rect)
+            pygame.draw.rect(self.screen, self.color2, self.rect2.rect)
+            for r in self.rects:
+                pygame.draw.rect(self.screen, r.color, r.rect)
+
+    def create_rect(self):
+        self.rect1 = Rectangle(self.screen.get_width()*1/3-self.rect_size1/2, self.rect_height1, self.rect_size1, self.rect_size1, self.color1)
+        self.rect2 = Rectangle(self.screen.get_width() * 2 / 3 - self.rect_size1/2, self.rect_height1,
+                                      self.rect_size1, self.rect_size1, self.color2)
+        a = self.screen.get_width() * 1/16
+        for c in self.colors_blended:
+            self.rects.append(Rectangle(a, self.rect_height2, self.rect_size2, self.rect_size2, c))
+            a += self.screen.get_width() * 1/4
 
 
 
@@ -89,6 +109,7 @@ class Game:
 
 
     def blend_colors(self):
+        self.colors_blended = []
         blend_color = []
         for i in range(3):
             # Average of colors
@@ -105,5 +126,25 @@ class Game:
                 v = (self.color1[i] + self.color2[i]) / 2
                 blend_color.append(v)
         self.blend_color = blend_color
+        self.create_fake_colors()
 
+    def create_fake_colors(self):
+        for i in range(3):
+            fake_color = []
+            for color in self.blend_color:
+                n = random.randint(0, 1)
+                if n == 0:
+                    color *= 1/random.randint(1, 10)
+                else:
+                    color *= random.randint(0, 3)
+                    if color > 255:
+                        color = 255
+                fake_color.append(color)
+            self.colors_blended.append(fake_color)
+        self.colors_blended.insert(random.randint(0, 2), self.blend_color)
+
+class Rectangle:
+    def __init__(self, left, top, width, height, color):
+        self.rect = pygame.rect.Rect(left, top, width, height)
+        self.color = color
 
