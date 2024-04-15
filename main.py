@@ -8,7 +8,6 @@ clock = pygame.time.Clock()
 FPS = 60
 g = Game(screen)
 
-
 running = True
 
 while running:
@@ -31,6 +30,7 @@ while running:
                     if not g.showed:
                         if r == g.blend_rect:
                             g.show_result()
+                            g.add_square()
                         else:
                             g.life -= 1
                             if g.life <= 0:

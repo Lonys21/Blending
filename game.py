@@ -28,8 +28,18 @@ class Game:
         self.primary_rects = []
         self.rects = []
 
+        # Past_rect
+        self.NUMBER_SQUARE_ROW = 25
+        self.SQUARE_EDGE_SIZE = 1
+        self.SQUARE_SIZE = self.screen.get_width()/self.NUMBER_SQUARE_ROW - self.SQUARE_EDGE_SIZE*2
+        self.past_rects = []
+        self.mosaic_start_x = self.SQUARE_EDGE_SIZE
+        self.mosaic_x = self.mosaic_start_x
+        self.mosaic_start_y = self.screen.get_height() - self.SQUARE_SIZE - self.SQUARE_EDGE_SIZE
+        self.mosaic_y = self.mosaic_start_y
+
         # Life
-        self.MAX_LIFE = 5
+        self.MAX_LIFE = 15
         self.life = self.MAX_LIFE
         self.heart = pygame.image.load('assets/heart.png')
         self.heart = pygame.transform.scale(self.heart, (50, 60))
@@ -54,6 +64,9 @@ class Game:
                     pygame.draw.rect(self.screen, r.color, r.rect)
                 for heart in range(self.life):
                     self.screen.blit(self.heart, (heart*self.heart.get_width() + 10*heart + self.start_heart_x, self.heart_y))
+                for r in self.past_rects:
+                    pygame.draw.rect(self.screen, 'black', (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE, r.rect.width + self.SQUARE_EDGE_SIZE*2, r.rect.height + self.SQUARE_EDGE_SIZE*2))
+                    pygame.draw.rect(self.screen, r.color, r.rect)
 
         else:
             print("defeat")
@@ -246,6 +259,15 @@ class Game:
         self.blend_colors()
         self.create_fake_colors()
         self.create_rect()
+
+    def add_square(self):
+        self.past_rects.append(Rectangle(self.mosaic_x, self.mosaic_y, self.SQUARE_SIZE, self.SQUARE_SIZE, self.blend_color))
+        self.mosaic_x += self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2
+        if len(self.past_rects) % self.NUMBER_SQUARE_ROW == 0:
+            self.life = self.MAX_LIFE
+            self.mosaic_y -= self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2
+            self.mosaic_x = self.mosaic_start_x
+
 class Rectangle:
     def __init__(self, left, top, width, height, color):
         self.rect_initial = pygame.rect.Rect(left, top, width, height)
@@ -258,5 +280,7 @@ class Rectangle:
 
     def set_initial_rect(self):
         self.rect = self.rect_initial.copy()
+
+
 
 
