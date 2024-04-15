@@ -4,6 +4,7 @@ import pygame, random
 class Game:
     def __init__(self, screen):
         self.screen = screen
+        self.actual_screen = 'menu'
         self.background_color = 'gray'
 
 
@@ -27,6 +28,14 @@ class Game:
         self.primary_rects = []
         self.rects = []
 
+        # Life
+        self.MAX_LIFE = 5
+        self.life = self.MAX_LIFE
+        self.heart = pygame.image.load('assets/heart.png')
+        self.heart = pygame.transform.scale(self.heart, (50, 60))
+        self.heart_y = 0
+        self.start_heart_x = 10
+
         # Game
         self.start()
 
@@ -35,13 +44,20 @@ class Game:
 
     def update(self):
         self.screen.fill(self.background_color)
-        if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
-            for r in self.primary_rects:
-                pygame.draw.rect(self.screen, 'black', r.rect_extend)
-                pygame.draw.rect(self.screen, r.color, r.rect)
-            for r in self.rects:
-                pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
-                pygame.draw.rect(self.screen, r.color, r.rect)
+        if self.actual_screen == 'playing':
+            if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
+                for r in self.primary_rects:
+                    pygame.draw.rect(self.screen, 'black', r.rect_extend)
+                    pygame.draw.rect(self.screen, r.color, r.rect)
+                for r in self.rects:
+                    pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
+                    pygame.draw.rect(self.screen, r.color, r.rect)
+                for heart in range(self.life):
+                    self.screen.blit(self.heart, (heart*self.heart.get_width() + 10*heart + self.start_heart_x, self.heart_y))
+
+        else:
+            print("defeat")
+
 
     def create_rect(self):
         self.primary_rects = []
@@ -225,6 +241,7 @@ class Game:
 
     def start(self):
         self.showed = False
+        self.actual_screen = 'playing'
         self.create_colors()
         self.blend_colors()
         self.create_fake_colors()

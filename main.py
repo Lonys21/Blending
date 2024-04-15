@@ -32,6 +32,9 @@ while running:
                         if r == g.blend_rect:
                             g.show_result()
                         else:
+                            g.life -= 1
+                            if g.life <= 0:
+                                g.actual_screen = 'loose'
                             g.rects.remove(r)
                             g.colors_blended.remove(r.color)
                             g.create_rect()
