@@ -23,11 +23,9 @@ while running:
         if ev.type == pygame.QUIT:
             running = False
         elif ev.type == pygame.KEYDOWN:
-            g.create_colors()
-            g.blend_colors()
-            g.create_rect()
+            g.start()
 
-        elif ev.type == pygame.MOUSEBUTTONUP:
+        elif ev.type == pygame.MOUSEBUTTONDOWN:
             for r in g.rects:
                 if r.rect.collidepoint(ev.pos):
                     if not g.showed:
@@ -45,8 +43,6 @@ while running:
                             g.rects = [g.blend_rect]
                             g.create_rect()
                             g.show_result()
-            if g.blend_rect.rect.collidepoint(ev.pos):
-                g.show_result()
 
 
         elif ev.type == pygame.MOUSEMOTION:
