@@ -22,7 +22,14 @@ while running:
         if ev.type == pygame.QUIT:
             running = False
         elif ev.type == pygame.KEYDOWN:
-            g.start()
+            g.past_rects = []
+            g.mosaic_y = g.mosaic_start_y
+            g.mosaic_x = g.mosaic_start_x
+            for i in range(g.NUMBER_SQUARE_ROW*100):
+                g.start()
+                g.add_square()
+
+
 
         elif ev.type == pygame.MOUSEBUTTONDOWN:
             for r in g.rects:
@@ -33,7 +40,7 @@ while running:
                             g.add_square()
                         else:
                             g.life -= 1
-                            if g.life <= 0:
+                            if g.life == 1000:
                                 g.actual_screen = 'loose'
                             g.rects.remove(r)
                             g.colors_blended.remove(r.color)

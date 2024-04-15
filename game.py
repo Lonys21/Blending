@@ -11,13 +11,13 @@ class Game:
         # colors
         self.DOMINANT_VARIABLE = (150, 255)
         self.SECONDE_VARIABLE = (0, 100)
-        self.SAME_VARIABLE = (50, 200)
+        self.SAME_VARIABLE = (25, 215)
         self.colors = []
         self.color1 = []
         self.color2 = []
         self.blend_color = []
         self.colors_blended = []
-        self.modes = ('RGB', 'RGB+', 'CMY', 'CMY+')
+        self.modes = ('RGB', 'RGB+', 'RGB++', 'CMY', 'CMY+', 'CMY++')
         self.mode = ''
 
         # Rect
@@ -56,6 +56,9 @@ class Game:
         self.screen.fill(self.background_color)
         if self.actual_screen == 'playing':
             if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
+                for r in self.past_rects:
+                    pygame.draw.rect(self.screen, 'black', (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE, r.rect.width + self.SQUARE_EDGE_SIZE*2, r.rect.height + self.SQUARE_EDGE_SIZE*2))
+                    pygame.draw.rect(self.screen, r.color, r.rect)
                 for r in self.primary_rects:
                     pygame.draw.rect(self.screen, 'black', r.rect_extend)
                     pygame.draw.rect(self.screen, r.color, r.rect)
@@ -64,9 +67,6 @@ class Game:
                     pygame.draw.rect(self.screen, r.color, r.rect)
                 for heart in range(self.life):
                     self.screen.blit(self.heart, (heart*self.heart.get_width() + 10*heart + self.start_heart_x, self.heart_y))
-                for r in self.past_rects:
-                    pygame.draw.rect(self.screen, 'black', (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE, r.rect.width + self.SQUARE_EDGE_SIZE*2, r.rect.height + self.SQUARE_EDGE_SIZE*2))
-                    pygame.draw.rect(self.screen, r.color, r.rect)
 
         else:
             print("defeat")
@@ -95,9 +95,14 @@ class Game:
                 a = self.screen.get_width() * 2/3 - self.rect_size2/2
 
 
-    def create_colors(self):
+    def create_colors_(self):
+        # RGB --> random variables = 0 + random number
+        # RGB+ --> 1 dominant variable = 0 + high random number; 2 second variable = 0 + low random number
+        # RGB++ --> 1 dominant variable = 255; 2 zero variable = 0
+        # CMY --> random variables = 255 - random number
+        # CMY+ --> 1 dominant varaible 255 - high random number; 2 secon variable = 255 - low random number
         self.mode = random.choice(self.modes)
-        if self.mode == 'RGB':
+        if self.mode == 'RGB+':
             R = 0
             G = 0
             B = 0
@@ -124,7 +129,7 @@ class Game:
             self.colors.append(color2)
             self.color1 = color1
             self.color2 = color2
-        elif self.mode == 'RGB+':
+        elif self.mode == 'RGB':
             color1 = []
             v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
             v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
@@ -153,7 +158,35 @@ class Game:
                         v = 255
                     elif v < 0:
                         v = 0
-        elif self.mode == 'CMY':
+        elif self.mode == 'RGB++':
+            R = 0
+            G = 0
+            B = 0
+            color = [[R, 0], [G, 1], [B, 2]]
+            color1 = []
+            dominant_color = random.choice(color)
+            dominant_color[0] = 255
+            v1 = 0
+            v2 = 0
+            color1.append(v1)
+            color1.append(v2)
+            color1.insert(dominant_color[1], dominant_color[0])
+
+            del color[dominant_color[1]]
+            color2 = []
+            dominant_color = random.choice(color)
+            dominant_color[0] = 255
+            v1 = 0
+            v2 = 0
+            color2.append(v1)
+            color2.append(v2)
+            color2.insert(dominant_color[1], dominant_color[0])
+            self.colors.append(color1)
+            self.colors.append(color2)
+            self.color1 = color1
+            self.color2 = color2
+            print(self.color1, self.color2)
+        elif self.mode == 'CMY+':
             R = 255
             G = 255
             B = 255
@@ -185,7 +218,7 @@ class Game:
             color2.insert(dominant_color[1], dominant_color[0])
             self.color1 = color1
             self.color2 = color2
-        elif self.mode == 'CMY+':
+        elif self.mode == 'CMY':
             color1 = []
             v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
             v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
@@ -209,23 +242,107 @@ class Game:
             self.color1 = color1
             self.color2 = color2
 
+    def create_colors(self):
+        # RGB --> random variables = 0 + random number
+        # RGB+ --> 1 dominant variable = 0 + high random number; 2 second variables = 0 + low random number
+        # RGB++ --> 1 dominant variable = 255; 2 zero variable = 0
+        # CMY --> random variables = 255 - random number
+        # CMY+ --> 1 dominant varaible 255 - high random number; 2 second variables = 255 - low random number
+        # CMY++ --> 1 variable = 0; 2 variables = 255
+        colors = []
+        for i in range(2):
+            self.mode = random.choice(self.modes)
+            if self.mode == 'RGB+':
+                R = 0
+                G = 0
+                B = 0
+                color_ = [[R, 0], [G, 1], [B, 2]]
+                color = []
+                dominant_color = random.choice(color_)
+                dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
+                v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
+                v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
+                color.append(v1)
+                color.append(v2)
+                color.insert(dominant_color[1], dominant_color[0])
+                colors.append(color)
+
+            elif self.mode == 'RGB':
+                color = []
+                v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                color.append(v1)
+                color.append(v2)
+                color.append(v3)
+                colors.append(color)
+            elif self.mode == 'RGB++':
+                R = 0
+                G = 0
+                B = 0
+                color_ = [[R, 0], [G, 1], [B, 2]]
+                color = []
+                dominant_color = random.choice(color_)
+                dominant_color[0] = 255
+                v1 = 0
+                v2 = 0
+                color.append(v1)
+                color.append(v2)
+                color.insert(dominant_color[1], dominant_color[0])
+                colors.append(color)
+
+            elif self.mode == 'CMY+':
+                R = 255
+                G = 255
+                B = 255
+                color_ = [[R, 0], [G, 1], [B, 2]]
+                color = []
+                dominant_color = random.choice(color_)
+                dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
+                v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
+                v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
+                dominant_color[0] = color_[dominant_color[1]][0] - dominant_color[0]
+                v1 = 255 - v1
+                v2 = 255 - v2
+                color.append(v1)
+                color.append(v2)
+                color.insert(dominant_color[1], dominant_color[0])
+                colors.append(color)
+            elif self.mode == 'CMY':
+                color = []
+                v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
+                v1 = 255 - v1
+                v2 = 255 - v2
+                v3 = 255 - v3
+                color.append(v1)
+                color.append(v2)
+                color.append(v3)
+                colors.append(color)
+            elif self.mode == 'CMY++':
+                R = 255
+                G = 255
+                B = 255
+                color_ = [[R, 0], [G, 1], [B, 2]]
+                color = []
+                dominant_color = random.choice(color_)
+                dominant_color[0] = 0
+                v1 = 255
+                v2 = 255
+                dominant_color[0] = color_[dominant_color[1]][0] - dominant_color[0]
+                color.append(v1)
+                color.append(v2)
+                color.insert(dominant_color[1], dominant_color[0])
+                colors.append(color)
+        self.color1 = colors[0]
+        self.color2 = colors[1]
     def blend_colors(self):
         self.colors_blended = []
         blend_color = []
         for i in range(3):
-            # Average of colors
-            # v = (self.color1[i] + self.color2[i])/2
-
-            if self.mode == 'RGB' or self.mode == 'RGB+':
-                # Sum of colors
-                v = self.color1[i] + self.color2[i]
-                if v > 255:
-                    v = 255
-                blend_color.append(v)
-            elif self.mode == 'CMY' or self.mode == 'CMY+':
-                # Average of colors
-                v = (self.color1[i] + self.color2[i]) / 2
-                blend_color.append(v)
+            v = (self.color1[i] + self.color2[i]) / 2
+            blend_color.append(v)
         self.blend_color = blend_color
 
 
