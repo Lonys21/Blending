@@ -36,14 +36,15 @@ while running:
                 if r.rect.collidepoint(ev.pos):
                     if not g.showed:
                         if r == g.blend_rect:
-                            g.show_result()
-                            g.add_square()
+                            g.true(r)
                         else:
                             g.false(r)
 
                     else:
                         if r == g.blend_rect:
                             g.start()
+                            if g.gamemode == 'score':
+                                g.round += 1
                         else:
                             g.colors_blended = [g.blend_color]
                             g.rects = [g.blend_rect]

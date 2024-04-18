@@ -9,7 +9,7 @@ class Game:
         self.background_color = 'gray'
 
         # Gamemode
-        self.gamemode = 'life' # Life Mode, Score Mode, Party
+        self.gamemode = 'score' # Life Mode, Score Mode, Party
 
 
         # colors
@@ -33,8 +33,8 @@ class Game:
         self.rects = []
 
         # Past_rect
-        self.NUMBER_SQUARE_ROW = 25
-        self.SQUARE_EDGE_SIZE = 1
+        self.NUMBER_SQUARE_ROW = 10  # 25 for life mode
+        self.SQUARE_EDGE_SIZE = int(self.screen.get_width()/self.NUMBER_SQUARE_ROW * 0.05)
         self.SQUARE_SIZE = self.screen.get_width()/self.NUMBER_SQUARE_ROW - self.SQUARE_EDGE_SIZE*2
         self.past_rects = []
         self.mosaic_start_x = self.SQUARE_EDGE_SIZE
@@ -42,13 +42,24 @@ class Game:
         self.mosaic_start_y = self.screen.get_height() - self.SQUARE_SIZE - self.SQUARE_EDGE_SIZE
         self.mosaic_y = self.mosaic_start_y
 
-        # Life
+        # Lifemode
         self.MAX_LIFE = 5
         self.life = self.MAX_LIFE
         self.heart = pygame.image.load('assets/heart.png')
         self.heart = pygame.transform.scale(self.heart, (50, 60))
         self.heart_y = 0
         self.start_heart_x = 10
+
+        # Score mode
+        self.max_round = 10
+        self.round = 1
+        self.score_font = pygame.font.SysFont('Arial', 60)
+        self.score_font_color = 'black'
+        self.round_font_x = 650
+        self.round_font_y = 25
+        self.score_font_x = 100
+        self.score_font_y = 100
+        self.point = 0
 
         # Game
         self.start()
@@ -57,6 +68,10 @@ class Game:
     def update(self):
         self.screen.fill(self.background_color)
         if self.actual_screen == 'playing':
+            if self.gamemode == 'life':
+                self.update_life_mode()
+            elif self.gamemode == 'score':
+                self.update_score_mode()
             if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
                 for r in self.past_rects:
                     pygame.draw.rect(self.screen, 'black',
@@ -70,15 +85,26 @@ class Game:
                 for r in self.rects:
                     pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
                     pygame.draw.rect(self.screen, r.color, r.rect)
-                if self.gamemode == 'life':
-                    self.update_life_mode()
 
-
-        elif self.actual_screen == 'loose':
+        elif self.actual_screen == 'loose': # when the player lost the life mode
             self.loose_life_mode()
+
+        elif self.actual_screen == 'end': # when all rounds have been made
+            self.end_score_mode()
+
+    def true(self, rect):
+        # manage a good answer in fonction of the mode
+        self.show_result()
+        if self.gamemode == 'life':
+            self.add_square()
+        elif self.gamemode == 'score':
+            self.add_square('green')
+            self.point += 1
 
     def false(self, rect):
         # manage a bad answer in fonction of the mode
+
+        # Life Mode
         if self.gamemode == 'life':
             self.life -= 1
             if self.life == 0:
@@ -86,6 +112,11 @@ class Game:
             self.rects.remove(rect) # delete the fake rect of the list
             self.colors_blended.remove(rect.color) # delete fake color of the list
             self.create_rect() # actualise rectangles
+
+        # Score mode
+        elif self.gamemode == 'score':
+            self.add_square('red') # add a red square --> Bad answer
+            self.show_result()
 
     def update_life_mode(self):
         # display heart on the screen
@@ -129,6 +160,19 @@ class Game:
                 x = start_x
                 i = 0
 
+    def update_score_mode(self):
+        self.screen.blit(self.score_font.render(str(self.round)+'/'+str(self.max_round), True, self.score_font_color), (self.round_font_x, self.round_font_y))
+        if self.round == self.max_round + 1:
+            self.actual_screen = 'end'
+
+    def end_score_mode(self):
+        start_x = 100
+        start_y = 500
+        square_in_a_row = 5
+        square_size = 120
+        self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
+        self.screen.blit(self.score_font.render(f'Well, your score is: {self.point}/{self.max_round}',True, self.score_font_color),
+                         (self.score_font_x, self.score_font_y))
 
 
     def create_rect(self):
@@ -152,7 +196,6 @@ class Game:
             a += self.screen.get_width() * 1/len(self.colors_blended)
             if len(self.colors_blended) == 2:
                 a = self.screen.get_width() * 2/3 - self.rect_size2/2
-
 
     def create_colors_(self):
         # RGB --> random variables = 0 + random number
@@ -436,13 +479,19 @@ class Game:
         self.create_fake_colors()
         self.create_rect()
 
-    def add_square(self):
-        self.past_rects.append(Rectangle(self.mosaic_x, self.mosaic_y, self.SQUARE_SIZE, self.SQUARE_SIZE, self.blend_color))
+    def add_square(self, color=''):
+        if color == '':
+            color = self.blend_color
+        self.past_rects.append(Rectangle(self.mosaic_x, self.mosaic_y, self.SQUARE_SIZE, self.SQUARE_SIZE, color))
         self.mosaic_x += self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2
-        if len(self.past_rects) % self.NUMBER_SQUARE_ROW == 0:
-            self.life = self.MAX_LIFE
-            self.mosaic_y -= self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2
-            self.mosaic_x = self.mosaic_start_x
+        if self.gamemode == 'life':
+            if len(self.past_rects) % self.NUMBER_SQUARE_ROW == 0:
+                self.life = self.MAX_LIFE
+                self.mosaic_y -= self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE * 2
+                self.mosaic_x = self.mosaic_start_x
+
+
+
 
 class Rectangle:
     def __init__(self, left, top, width, height, color):
