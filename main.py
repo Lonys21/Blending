@@ -39,12 +39,8 @@ while running:
                             g.show_result()
                             g.add_square()
                         else:
-                            g.life -= 1
-                            if g.life == 1000:
-                                g.actual_screen = 'loose'
-                            g.rects.remove(r)
-                            g.colors_blended.remove(r.color)
-                            g.create_rect()
+                            g.false(r)
+
                     else:
                         if r == g.blend_rect:
                             g.start()

@@ -3,9 +3,13 @@ import pygame, random
 
 class Game:
     def __init__(self, screen):
+        # screen
         self.screen = screen
         self.actual_screen = 'menu'
         self.background_color = 'gray'
+
+        # Gamemode
+        self.gamemode = 'life' # Life Mode, Score Mode, Party
 
 
         # colors
@@ -39,7 +43,7 @@ class Game:
         self.mosaic_y = self.mosaic_start_y
 
         # Life
-        self.MAX_LIFE = 15
+        self.MAX_LIFE = 5
         self.life = self.MAX_LIFE
         self.heart = pygame.image.load('assets/heart.png')
         self.heart = pygame.transform.scale(self.heart, (50, 60))
@@ -50,14 +54,15 @@ class Game:
         self.start()
 
 
-
-
     def update(self):
         self.screen.fill(self.background_color)
         if self.actual_screen == 'playing':
             if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
                 for r in self.past_rects:
-                    pygame.draw.rect(self.screen, 'black', (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE, r.rect.width + self.SQUARE_EDGE_SIZE*2, r.rect.height + self.SQUARE_EDGE_SIZE*2))
+                    pygame.draw.rect(self.screen, 'black',
+                                     (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE,
+                                      r.rect.width + self.SQUARE_EDGE_SIZE * 2,
+                                      r.rect.height + self.SQUARE_EDGE_SIZE * 2))
                     pygame.draw.rect(self.screen, r.color, r.rect)
                 for r in self.primary_rects:
                     pygame.draw.rect(self.screen, 'black', r.rect_extend)
@@ -65,11 +70,65 @@ class Game:
                 for r in self.rects:
                     pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
                     pygame.draw.rect(self.screen, r.color, r.rect)
-                for heart in range(self.life):
-                    self.screen.blit(self.heart, (heart*self.heart.get_width() + 10*heart + self.start_heart_x, self.heart_y))
+                if self.gamemode == 'life':
+                    self.update_life_mode()
 
+
+        elif self.actual_screen == 'loose':
+            self.loose_life_mode()
+
+    def false(self, rect):
+        # manage a bad answer in fonction of the mode
+        if self.gamemode == 'life':
+            self.life -= 1
+            if self.life == 0:
+                self.actual_screen = 'loose'
+            self.rects.remove(rect) # delete the fake rect of the list
+            self.colors_blended.remove(rect.color) # delete fake color of the list
+            self.create_rect() # actualise rectangles
+
+    def update_life_mode(self):
+        # display heart on the screen
+        for heart in range(self.life):
+            self.screen.blit(self.heart,
+                             (heart * self.heart.get_width() + 10 * heart + self.start_heart_x, self.heart_y))
+
+    def loose_life_mode(self):
+        start_x = 100
+        start_y = 100
+
+        # square_root of number of square then round it to the upper number
+        square_in_a_row = len(self.past_rects) ** (1 / 2)
+        e = round(square_in_a_row, 1)
+        if e - int(e) < 0.5:
+            r = square_in_a_row - (square_in_a_row - round(square_in_a_row))
+            r += 1
         else:
-            print("defeat")
+            square_in_a_row = round(square_in_a_row)
+
+        # Square size in fonction of the number of square in one row
+        square_size = (self.screen.get_width() - start_y*2)/square_in_a_row
+
+        # call print mosaic function
+        self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
+
+    def print_mosaic(self, start_x, start_y, square_in_a_row, square_size):
+        x = start_x
+        y = start_y
+        i = 0
+        square_edge_size = int(square_size/50)
+        for r in self.past_rects:
+            pygame.draw.rect(self.screen, 'black', (x - square_edge_size, y - square_edge_size,
+                                                    square_size + square_edge_size * 2,
+                                                    square_size + square_edge_size * 2))
+            pygame.draw.rect(self.screen, r.color, (x, y, square_size, square_size))
+            x += square_size + square_edge_size*2
+            i += 1
+            if i == square_in_a_row:
+                y += square_size + square_edge_size*2
+                x = start_x
+                i = 0
+
 
 
     def create_rect(self):
@@ -397,7 +456,6 @@ class Rectangle:
 
     def set_initial_rect(self):
         self.rect = self.rect_initial.copy()
-
 
 
 
