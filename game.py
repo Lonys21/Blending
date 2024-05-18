@@ -5,8 +5,13 @@ class Game:
     def __init__(self, screen):
         # screen
         self.screen = screen
-        self.actual_screen = 'menu'
-        self.background_color = 'beige'
+        self.actual_screen = 'welcome_screen'
+        self.background_color = 'beige' # #f4f6e3
+
+        # Welcome_screen
+        self.welclome_sceen = pygame.image.load("assets/Welcome_screen.png")
+        self.play_button = Button("Play", 238, 594, self, width=324, height=147)
+
 
         # Button
         self.button_width = self.screen.get_width()/2
@@ -15,19 +20,12 @@ class Game:
         self.button_height_horizontal = self.button_width_horizontal*20/50
         self.button_x = self.screen.get_width()/2 - self.button_width/2
         self.button_y_menu = self.screen.get_height()/4 - self.button_height/2
-        #self.button_y_replay = self.screen.get_height()/2 - self.button_height/2
         self.button_y_replay = 20
         self.button_y_additional_round = 300
         self.button_home_size = 100
         self.button_x_home_life = self.screen.get_width() - 15 - self.button_home_size
         self.button_x_home_score = 15
         self.button_y_home = 15
-        """self.buttons_datas = [("Life_mode", (self.button_x, self.button_y_menu)), ("Round_mode", (self.button_x, self.button_y_menu*2)),
-                        ("Replay", (self.button_x, self.button_y_replay)), ("Additional_round", (self.button_x, self.button_y_replay))]
-        self.buttons = pygame.sprite.Group()
-        for b in self.buttons_datas:
-            self.buttons.add(Button(b[0], b[1][0], b[1][1]))"""
-
         self.buttons_menu = pygame.sprite.Group()
         self.buttons_menu.add(Button("Life_mode", self.button_x, self.button_y_menu, self),
                               Button("Round_mode", self.button_x, self.button_y_menu + self.screen.get_width()/2, self))
@@ -78,7 +76,6 @@ class Game:
         self.heart = pygame.transform.scale(self.heart, (50, 60))
         self.heart_y = 0
         self.start_heart_x = 10
-        self.loose_screen = 1
 
         # Score mode
         self.NUMBER_ROUNDS = 10
@@ -98,7 +95,10 @@ class Game:
 
     def update(self):
         self.screen.fill(self.background_color)
-        if self.actual_screen == 'menu':
+        if self.actual_screen == 'welcome_screen':
+            self.screen.blit(self.welclome_sceen, (0, 0))
+            self.screen.blit(self.play_button.image, (self.play_button.rect.x, self.play_button.rect.y))
+        elif self.actual_screen == 'menu':
             for b in self.buttons_menu:
                 self.screen.blit(b.image, (b.rect.x, b.rect.y))
         elif self.actual_screen == 'playing':
@@ -190,41 +190,36 @@ class Game:
         self.home_button.rect.x = self.button_x_home_life
 
     def loose_life_mode(self):
-        if self.loose_screen == 1:
-            start_x = 100
-            start_y = 100
-            arrow_size = start_y/2
-            # display arrow
-            """self.arrow_image = pygame.transform.scale(self.arrow_image, (arrow_size, arrow_size))
-            self.arrow_rect = self.arrow_image.get_rect()
-            self.arrow_rect.x = self.screen.get_width() - start_y/2 - arrow_size/2
-            self.arrow_rect.y = self.screen.get_height() / 2 - self.arrow_rect.height / 2"""
+        start_x = 100
+        start_y = 100
+        if self.past_rects != self.previous_round_rects:
+            self.past_rects = self.previous_round_rects + self.past_rects
+            self.previous_round_rects = self.past_rects
 
-            # square_root of number of square then round it to the upper number
-            square_in_a_row = len(self.past_rects) ** (1 / 2)
-            e = round(square_in_a_row, 1)
-            if 0 < e - int(e) < 0.5:
-                square_in_a_row = square_in_a_row - (square_in_a_row - round(square_in_a_row))
-                square_in_a_row += 1
-            else:
-                square_in_a_row = round(square_in_a_row)
-            if square_in_a_row == 0:
-                square_in_a_row = 1
+        # square_root of number of square then round it to the upper number
+        square_in_a_row = len(self.past_rects) ** (1 / 2)
+        e = round(square_in_a_row, 1)
+        if 0 < e - int(e) < 0.5:
+            square_in_a_row = square_in_a_row - (square_in_a_row - round(square_in_a_row))
+            square_in_a_row += 1
+        else:
+            square_in_a_row = round(square_in_a_row)
+        if square_in_a_row == 0:
+            square_in_a_row = 1
 
 
-            # Square size in fonction of the number of square in one row
-            square_size = (self.screen.get_width() - start_x*2)/square_in_a_row
-            if int(len(self.past_rects))/square_in_a_row * square_size > self.screen.get_height()/2 - start_y:
-                square_size = (self.screen.get_height()/2 - start_y)/square_in_a_row
+        # Square size in fonction of the number of square in one row
+        square_size = (self.screen.get_width() - start_x*2)/square_in_a_row
+        if int(len(self.past_rects))/square_in_a_row * square_size > self.screen.get_height()/2 - start_y:
+            square_size = (self.screen.get_height()/2 - start_y)/square_in_a_row
 
-            # call print mosaic function
-            start_x = self.screen.get_width()/2 - square_in_a_row*square_size/2
-            start_y = self.screen.get_height()/2 - int(len(self.past_rects))/square_in_a_row * square_size/2
-            self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
+        # call print mosaic function
+        start_x = self.screen.get_width()/2 - square_in_a_row*square_size/2
+        start_y = self.screen.get_height()/2 - int(len(self.past_rects))/square_in_a_row * square_size/2
+        self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
 
-            # self.screen.blit(self.arrow_image, (self.arrow_rect.x, self.arrow_rect.y))
-            self.screen.blit(self.replay_button.image, (self.replay_button.rect.x, self.replay_button.rect.y))
-            self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
+        self.screen.blit(self.replay_button.image, (self.replay_button.rect.x, self.replay_button.rect.y))
+        self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
 
     def print_mosaic(self, start_x, start_y, square_in_a_row, square_size, rects=0):
         if rects == 0:
@@ -473,10 +468,15 @@ class Game:
         self.past_rects.append(Rectangle(self.mosaic_x, self.mosaic_y, self.SQUARE_SIZE, self.SQUARE_SIZE, color))
         self.mosaic_x += self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2
         if self.gamemode == 'life':
-            if len(self.past_rects) % self.NUMBER_SQUARE_ROW == 0:
+            if len(self.past_rects) == self.NUMBER_SQUARE_ROW:
                 self.life = self.MAX_LIFE
-                self.mosaic_y -= self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE * 2
+                self.mosaic_y = self.mosaic_start_y
                 self.mosaic_x = self.mosaic_start_x
+                self.previous_round_rects = self.past_rects.copy()
+            if len(self.past_rects) == self.NUMBER_SQUARE_ROW + 1:
+                self.past_rects = []
+                self.past_rects.append(
+                    Rectangle(self.mosaic_start_x, self.mosaic_start_y, self.SQUARE_SIZE, self.SQUARE_SIZE, color))
 
 
 

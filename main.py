@@ -32,7 +32,10 @@ while running:
 
 
         elif ev.type == pygame.MOUSEBUTTONDOWN:
-            if g.actual_screen == 'menu':
+            if g.actual_screen == 'welcome_screen':
+                if g.play_button.rect.collidepoint(ev.pos):
+                    g.actual_screen = "menu"
+            elif g.actual_screen == 'menu':
                 for b in g.buttons_menu:
                     if b.rect.collidepoint(ev.pos):
                         if b.name == "Life_mode":
@@ -64,8 +67,6 @@ while running:
                     g.actual_screen = 'menu'
                     g.home_button.image = g.home_button.image_idle
             elif g.actual_screen == 'loose':
-                """if g.arrow_rect.collidepoint(ev.pos):
-                    g.loose_screen = 2"""
                 if g.replay_button.rect.collidepoint(ev.pos):
                     g.restart()
                 if g.home_button.rect.collidepoint(ev.pos):
@@ -81,7 +82,12 @@ while running:
 
 
         elif ev.type == pygame.MOUSEMOTION:
-            if g.actual_screen == 'menu':
+            if g.actual_screen == 'welcome_screen':
+                if g.play_button.rect.collidepoint(ev.pos):
+                    g.play_button.image = g.play_button.image_mouse_on
+                else:
+                    g.play_button.image = g.play_button.image_idle
+            elif g.actual_screen == 'menu':
                 for b in g.buttons_menu:
                     if b.rect.collidepoint(ev.pos):
                         b.image = b.image_mouse_on
