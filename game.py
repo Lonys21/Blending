@@ -6,11 +6,39 @@ class Game:
         # screen
         self.screen = screen
         self.actual_screen = 'menu'
-        self.background_color = 'gray'
+        self.background_color = 'beige'
+
+        # Button
+        self.button_width = self.screen.get_width()/2
+        self.button_height = self.button_width*17/25
+        self.button_width_horizontal = self.button_width - 60
+        self.button_height_horizontal = self.button_width_horizontal*20/50
+        self.button_x = self.screen.get_width()/2 - self.button_width/2
+        self.button_y_menu = self.screen.get_height()/4 - self.button_height/2
+        #self.button_y_replay = self.screen.get_height()/2 - self.button_height/2
+        self.button_y_replay = 20
+        self.button_y_additional_round = 300
+        self.button_home_size = 100
+        self.button_x_home_life = self.screen.get_width() - 15 - self.button_home_size
+        self.button_x_home_score = 15
+        self.button_y_home = 15
+        """self.buttons_datas = [("Life_mode", (self.button_x, self.button_y_menu)), ("Round_mode", (self.button_x, self.button_y_menu*2)),
+                        ("Replay", (self.button_x, self.button_y_replay)), ("Additional_round", (self.button_x, self.button_y_replay))]
+        self.buttons = pygame.sprite.Group()
+        for b in self.buttons_datas:
+            self.buttons.add(Button(b[0], b[1][0], b[1][1]))"""
+
+        self.buttons_menu = pygame.sprite.Group()
+        self.buttons_menu.add(Button("Life_mode", self.button_x, self.button_y_menu, self),
+                              Button("Round_mode", self.button_x, self.button_y_menu + self.screen.get_width()/2, self))
+        self.additional_round_button = Button("Additional_round", self.button_x, self.button_y_additional_round, self, height=self.button_height_horizontal)
+        self.replay_button = Button("Replay_horizontal", self.button_x, self.button_y_replay, self, height=self.button_height_horizontal)
+        self.arrow_image = pygame.image.load("assets/arrow.png")
+        self.menu_button = Button("Menu", self.button_x, self.button_y_additional_round - self.button_height_horizontal - 20, self, height=self.button_height_horizontal)
+        self.home_button = Button("Home", self.button_x_home_score, self.button_y_home, self, width=self.button_home_size, height=self.button_home_size)
 
         # Gamemode
-        self.gamemode = 'score' # Life Mode, Score Mode, Party
-
+        self.gamemode = '' # Life Mode, Score Mode, Party
 
         # colors
         self.DOMINANT_VARIABLE = (150, 255)
@@ -37,37 +65,43 @@ class Game:
         self.SQUARE_EDGE_SIZE = int(self.screen.get_width()/self.NUMBER_SQUARE_ROW * 0.05)
         self.SQUARE_SIZE = self.screen.get_width()/self.NUMBER_SQUARE_ROW - self.SQUARE_EDGE_SIZE*2
         self.past_rects = []
+        self.previous_round_rects = self.past_rects
         self.mosaic_start_x = self.SQUARE_EDGE_SIZE
         self.mosaic_x = self.mosaic_start_x
         self.mosaic_start_y = self.screen.get_height() - self.SQUARE_SIZE - self.SQUARE_EDGE_SIZE
         self.mosaic_y = self.mosaic_start_y
 
         # Lifemode
-        self.MAX_LIFE = 5
+        self.MAX_LIFE = 10
         self.life = self.MAX_LIFE
         self.heart = pygame.image.load('assets/heart.png')
         self.heart = pygame.transform.scale(self.heart, (50, 60))
         self.heart_y = 0
         self.start_heart_x = 10
+        self.loose_screen = 1
 
         # Score mode
-        self.max_round = 10
+        self.NUMBER_ROUNDS = 10
+        self.max_round = self.NUMBER_ROUNDS
         self.round = 1
+        self.rounds_did = 0
+        self.square_size = 0
+        self.previous_square_size = 0
         self.score_font = pygame.font.SysFont('Arial', 60)
         self.score_font_color = 'black'
         self.round_font_x = 650
         self.round_font_y = 25
         self.score_font_x = 100
-        self.score_font_y = 100
+        self.score_font_y = 50
         self.point = 0
-
-        # Game
-        self.start()
 
 
     def update(self):
         self.screen.fill(self.background_color)
-        if self.actual_screen == 'playing':
+        if self.actual_screen == 'menu':
+            for b in self.buttons_menu:
+                self.screen.blit(b.image, (b.rect.x, b.rect.y))
+        elif self.actual_screen == 'playing':
             if self.gamemode == 'life':
                 self.update_life_mode()
             elif self.gamemode == 'score':
@@ -85,12 +119,42 @@ class Game:
                 for r in self.rects:
                     pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
                     pygame.draw.rect(self.screen, r.color, r.rect)
+            self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
 
         elif self.actual_screen == 'loose': # when the player lost the life mode
             self.loose_life_mode()
 
         elif self.actual_screen == 'end': # when all rounds have been made
             self.end_score_mode()
+
+    def reset(self, mode):
+        # reset all variables
+        self.past_rects = []
+        # life mode
+        self.mosaic_x = self.mosaic_start_x
+        self.mosaic_y = self.mosaic_start_y
+        self.life = self.MAX_LIFE
+        # Score mode
+        if mode == 'all':
+            self.round = 1
+            self.rounds_did = 0
+            self.max_round = self.NUMBER_ROUNDS
+            self.previous_round_rects = []
+            self.square_size = 0
+            self.previous_square_size = 0
+            self.point = 0
+
+    def start(self):
+        self.showed = False
+        self.actual_screen = 'playing'
+        self.create_colors()
+        self.blend_colors()
+        self.create_fake_colors()
+        self.create_rect()
+
+    def restart(self, mode='all'):
+        self.reset(mode)
+        self.start()
 
     def true(self, rect):
         # manage a good answer in fonction of the mode
@@ -123,32 +187,55 @@ class Game:
         for heart in range(self.life):
             self.screen.blit(self.heart,
                              (heart * self.heart.get_width() + 10 * heart + self.start_heart_x, self.heart_y))
+        self.home_button.rect.x = self.button_x_home_life
 
     def loose_life_mode(self):
-        start_x = 100
-        start_y = 100
+        if self.loose_screen == 1:
+            start_x = 100
+            start_y = 100
+            arrow_size = start_y/2
+            # display arrow
+            """self.arrow_image = pygame.transform.scale(self.arrow_image, (arrow_size, arrow_size))
+            self.arrow_rect = self.arrow_image.get_rect()
+            self.arrow_rect.x = self.screen.get_width() - start_y/2 - arrow_size/2
+            self.arrow_rect.y = self.screen.get_height() / 2 - self.arrow_rect.height / 2"""
 
-        # square_root of number of square then round it to the upper number
-        square_in_a_row = len(self.past_rects) ** (1 / 2)
-        e = round(square_in_a_row, 1)
-        if e - int(e) < 0.5:
-            r = square_in_a_row - (square_in_a_row - round(square_in_a_row))
-            r += 1
-        else:
-            square_in_a_row = round(square_in_a_row)
+            # square_root of number of square then round it to the upper number
+            square_in_a_row = len(self.past_rects) ** (1 / 2)
+            e = round(square_in_a_row, 1)
+            if 0 < e - int(e) < 0.5:
+                square_in_a_row = square_in_a_row - (square_in_a_row - round(square_in_a_row))
+                square_in_a_row += 1
+            else:
+                square_in_a_row = round(square_in_a_row)
+            if square_in_a_row == 0:
+                square_in_a_row = 1
 
-        # Square size in fonction of the number of square in one row
-        square_size = (self.screen.get_width() - start_y*2)/square_in_a_row
 
-        # call print mosaic function
-        self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
+            # Square size in fonction of the number of square in one row
+            square_size = (self.screen.get_width() - start_x*2)/square_in_a_row
+            if int(len(self.past_rects))/square_in_a_row * square_size > self.screen.get_height()/2 - start_y:
+                square_size = (self.screen.get_height()/2 - start_y)/square_in_a_row
 
-    def print_mosaic(self, start_x, start_y, square_in_a_row, square_size):
+            # call print mosaic function
+            start_x = self.screen.get_width()/2 - square_in_a_row*square_size/2
+            start_y = self.screen.get_height()/2 - int(len(self.past_rects))/square_in_a_row * square_size/2
+            self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
+
+            # self.screen.blit(self.arrow_image, (self.arrow_rect.x, self.arrow_rect.y))
+            self.screen.blit(self.replay_button.image, (self.replay_button.rect.x, self.replay_button.rect.y))
+            self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
+
+    def print_mosaic(self, start_x, start_y, square_in_a_row, square_size, rects=0):
+        if rects == 0:
+            rects = self.past_rects
         x = start_x
         y = start_y
         i = 0
         square_edge_size = int(square_size/50)
-        for r in self.past_rects:
+        if square_edge_size < 1:
+            square_edge_size = 1
+        for r in rects:
             pygame.draw.rect(self.screen, 'black', (x - square_edge_size, y - square_edge_size,
                                                     square_size + square_edge_size * 2,
                                                     square_size + square_edge_size * 2))
@@ -164,15 +251,68 @@ class Game:
         self.screen.blit(self.score_font.render(str(self.round)+'/'+str(self.max_round), True, self.score_font_color), (self.round_font_x, self.round_font_y))
         if self.round == self.max_round + 1:
             self.actual_screen = 'end'
+            self.rounds_did += 1
+        self.home_button.rect.x = self.button_x_home_score
 
     def end_score_mode(self):
         start_x = 100
         start_y = 500
-        square_in_a_row = 5
-        square_size = 120
-        self.print_mosaic(start_x, start_y, square_in_a_row, square_size)
-        self.screen.blit(self.score_font.render(f'Well, your score is: {self.point}/{self.max_round}',True, self.score_font_color),
+        square_area_width = self.screen.get_width() - start_x*2
+        square_area_height = self.screen.get_height() - start_y - start_x/2
+        
+        # To rectify
+        if self.rounds_did == 1:
+            square_in_a_row = 5
+            self.square_size = square_area_width/square_in_a_row
+        elif self.rounds_did % 3 == 0:
+            square_in_a_row = 15
+            self.square_size = (square_area_width / square_in_a_row)
+            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
+                self.square_size * 3 / self.rounds_did
+        elif self.rounds_did % 2 == 0:
+            square_in_a_row = 10
+            self.square_size = square_area_width/square_in_a_row
+            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
+                if self.rounds_did % 4 == 0:
+                    square_in_a_row = 20
+                    self.square_size = square_area_width/square_in_a_row
+        elif self.rounds_did % 5 == 0:
+            square_in_a_row = 10
+            self.square_size = square_area_height/self.rounds_did
+            #  start_x += (square_area_width-square_in_a_row*self.square_size)/2
+        elif self.rounds_did % 7 == 0:
+            square_in_a_row = 14
+            self.square_size = (square_area_width / square_in_a_row)
+            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
+                self.square_size * 7 / self.rounds_did
+
+        if self.rounds_did > 2:
+            square_in_a_row = 10
+            if self.rounds_did*10/square_in_a_row*self.previous_square_size > square_area_height:
+                self.square_size = square_area_height / self.rounds_did
+                start_x += (square_area_width - square_in_a_row * self.square_size) / 2
+            else:
+                self.square_size = self.previous_square_size
+
+
+
+
+
+        if self.previous_round_rects != self.past_rects:
+            self.previous_round_rects += self.past_rects
+            self.past_rects = self.previous_round_rects.copy()
+
+        self.print_mosaic(start_x, start_y, square_in_a_row, self.square_size, self.previous_round_rects)
+        self.screen.blit(self.score_font.render(f'Well, your score is : {self.point}/{self.max_round}',True, self.score_font_color),
                          (self.score_font_x, self.score_font_y))
+        self.screen.blit(self.additional_round_button.image, (self.additional_round_button.rect.x, self.additional_round_button.rect.y))
+        self.screen.blit(self.menu_button.image, (self.menu_button.rect.x, self.menu_button.rect.y))
+
+    def additional_round(self):
+        self.max_round += self.NUMBER_ROUNDS
+        self.previous_square_size = self.square_size
+        self.restart("partial")
+
 
 
     def create_rect(self):
@@ -197,152 +337,7 @@ class Game:
             if len(self.colors_blended) == 2:
                 a = self.screen.get_width() * 2/3 - self.rect_size2/2
 
-    def create_colors_(self):
-        # RGB --> random variables = 0 + random number
-        # RGB+ --> 1 dominant variable = 0 + high random number; 2 second variable = 0 + low random number
-        # RGB++ --> 1 dominant variable = 255; 2 zero variable = 0
-        # CMY --> random variables = 255 - random number
-        # CMY+ --> 1 dominant varaible 255 - high random number; 2 secon variable = 255 - low random number
-        self.mode = random.choice(self.modes)
-        if self.mode == 'RGB+':
-            R = 0
-            G = 0
-            B = 0
-            color = [[R, 0], [G, 1], [B, 2]]
-            color1 = []
-            dominant_color = random.choice(color)
-            dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
-            v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            color1.append(v1)
-            color1.append(v2)
-            color1.insert(dominant_color[1], dominant_color[0])
 
-            del color[dominant_color[1]]
-            color2 = []
-            dominant_color = random.choice(color)
-            dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
-            v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            color2.append(v1)
-            color2.append(v2)
-            color2.insert(dominant_color[1], dominant_color[0])
-            self.colors.append(color1)
-            self.colors.append(color2)
-            self.color1 = color1
-            self.color2 = color2
-        elif self.mode == 'RGB':
-            color1 = []
-            v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            color1.append(v1)
-            color1.append(v2)
-            color1.append(v3)
-
-            color2 = []
-            v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            color2.append(v1)
-            color2.append(v2)
-            color2.append(v3)
-            self.colors.append(color1)
-            self.colors.append(color2)
-            self.color1 = color1
-            self.color2 = color2
-            light = random.randint(-50, 50)
-            colors = [self.color1, self.color2]
-            for c in colors:
-                for v in c:
-                    v += light
-                    if v > 255:
-                        v = 255
-                    elif v < 0:
-                        v = 0
-        elif self.mode == 'RGB++':
-            R = 0
-            G = 0
-            B = 0
-            color = [[R, 0], [G, 1], [B, 2]]
-            color1 = []
-            dominant_color = random.choice(color)
-            dominant_color[0] = 255
-            v1 = 0
-            v2 = 0
-            color1.append(v1)
-            color1.append(v2)
-            color1.insert(dominant_color[1], dominant_color[0])
-
-            del color[dominant_color[1]]
-            color2 = []
-            dominant_color = random.choice(color)
-            dominant_color[0] = 255
-            v1 = 0
-            v2 = 0
-            color2.append(v1)
-            color2.append(v2)
-            color2.insert(dominant_color[1], dominant_color[0])
-            self.colors.append(color1)
-            self.colors.append(color2)
-            self.color1 = color1
-            self.color2 = color2
-            print(self.color1, self.color2)
-        elif self.mode == 'CMY+':
-            R = 255
-            G = 255
-            B = 255
-            color = [[R, 0], [G, 1], [B, 2]]
-            color1 = []
-            dominant_color = random.choice(color)
-            dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
-            v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            dominant_color[0] = color[dominant_color[1]][0] - dominant_color[0]
-            v1 = 255 - v1
-            v2 = 255 - v2
-            color1.append(v1)
-            color1.append(v2)
-            color1.insert(dominant_color[1], dominant_color[0])
-            color2 = []
-            dominant_color_ = random.choice(color)
-            while dominant_color_ == dominant_color:
-                dominant_color_ = random.choice(color)
-            dominant_color = dominant_color_
-            dominant_color[0] = random.randint(self.DOMINANT_VARIABLE[0], self.DOMINANT_VARIABLE[1])
-            v1 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            v2 = random.randint(self.SECONDE_VARIABLE[0], self.SECONDE_VARIABLE[1])
-            dominant_color[0] = color[dominant_color[1]][0] - dominant_color[0]
-            v1 = 255 - v1
-            v2 = 255 - v2
-            color2.append(v1)
-            color2.append(v2)
-            color2.insert(dominant_color[1], dominant_color[0])
-            self.color1 = color1
-            self.color2 = color2
-        elif self.mode == 'CMY':
-            color1 = []
-            v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v1 = 255 - v1
-            v2 = 255 - v2
-            v3 = 255 - v3
-            color1.append(v1)
-            color1.append(v2)
-            color1.append(v3)
-            color2 = []
-            v1 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v2 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v3 = random.randint(self.SAME_VARIABLE[0], self.SAME_VARIABLE[1])
-            v1 = 255 - v1
-            v2 = 255 - v2
-            v3 = 255 - v3
-            color2.append(v1)
-            color2.append(v2)
-            color2.append(v3)
-            self.color1 = color1
-            self.color2 = color2
 
     def create_colors(self):
         # RGB --> random variables = 0 + random number
@@ -471,13 +466,6 @@ class Game:
         self.primary_rects = [Rectangle(self.screen.get_width()/2-self.rect_size1/2, self.rect_height1, self.rect_size1, self.rect_size1, self.blend_color)]
         self.showed = True
 
-    def start(self):
-        self.showed = False
-        self.actual_screen = 'playing'
-        self.create_colors()
-        self.blend_colors()
-        self.create_fake_colors()
-        self.create_rect()
 
     def add_square(self, color=''):
         if color == '':
@@ -508,3 +496,43 @@ class Rectangle:
 
 
 
+class Button(pygame.sprite.Sprite):
+    def __init__(self, name, x, y, game, width=0, height=0):
+        super().__init__()
+        self.name = name
+        self.width = width
+        self.height = height
+        if self.width == 0:
+            self.original_width = game.button_width
+            self.width = self.original_width
+        if self.height == 0:
+            self.original_height = game.button_height
+            self.height = self.original_height
+        self.image_idle = pygame.transform.scale(pygame.image.load("assets/" + name + "_button.png"), (self.width, self.height))
+        self.image_mouse_on = pygame.transform.scale(pygame.image.load("assets/" + name + "_button_mouse_on.png"), (self.width, self.height))
+        self.image = self.image_idle
+        self.rect = self.image.get_rect()
+        self.original_x = x
+        self.original_y = y
+        self.rect.x = self.original_x
+        self.rect.y = self.original_y
+
+    def resize(self, width, height):
+        self.width = width
+        self.height = height
+        self.image_idle = pygame.transform.scale(self.image_idle, (self.width, self.height))
+        self.image_mouse_on = pygame.transform.scale(self.image_mouse_on, (self.width, self.height))
+
+    def reset_size(self):
+        self.width = self.original_width
+        self.height = self.original_height
+        self.image_idle = pygame.transform.scale(self.image_idle, (self.width, self.height))
+        self.image_mouse_on = pygame.transform.scale(self.image_mouse_on, (self.width, self.height))
+
+    def replace(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def reset_position(self):
+        self.rect.x = self.original_x
+        self.rect.y = self.original_y
