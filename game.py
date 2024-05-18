@@ -26,9 +26,13 @@ class Game:
         self.button_x_home_life = self.screen.get_width() - 15 - self.button_home_size
         self.button_x_home_score = 15
         self.button_y_home = 15
+        self.button_disco_size = 100
+        self.button_x_disco = self.screen.get_width() - 20 - self.button_disco_size
+        self.button_y_disco = self.screen.get_height() - 20 - self.button_disco_size
         self.buttons_menu = pygame.sprite.Group()
         self.buttons_menu.add(Button("Life_mode", self.button_x, self.button_y_menu, self),
-                              Button("Round_mode", self.button_x, self.button_y_menu + self.screen.get_width()/2, self))
+                              Button("Round_mode", self.button_x, self.button_y_menu + self.screen.get_width()/2, self),
+                              Button("Disco", self.button_x_disco, self.button_y_disco, self,width=self.button_disco_size, height=self.button_disco_size))
         self.additional_round_button = Button("Additional_round", self.button_x, self.button_y_additional_round, self, height=self.button_height_horizontal)
         self.replay_button = Button("Replay_horizontal", self.button_x, self.button_y_replay, self, height=self.button_height_horizontal)
         self.arrow_image = pygame.image.load("assets/arrow.png")
@@ -106,19 +110,33 @@ class Game:
                 self.update_life_mode()
             elif self.gamemode == 'score':
                 self.update_score_mode()
-            if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
+            if self.gamemode == 'disco':
+                self.past_rects = []
+                self.mosaic_y = self.mosaic_start_y
+                self.mosaic_x = self.mosaic_start_x
+                for i in range(500):
+                    self.start()
+                    self.add_square()
                 for r in self.past_rects:
                     pygame.draw.rect(self.screen, 'black',
                                      (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE,
                                       r.rect.width + self.SQUARE_EDGE_SIZE * 2,
                                       r.rect.height + self.SQUARE_EDGE_SIZE * 2))
                     pygame.draw.rect(self.screen, r.color, r.rect)
-                for r in self.primary_rects:
-                    pygame.draw.rect(self.screen, 'black', r.rect_extend)
-                    pygame.draw.rect(self.screen, r.color, r.rect)
-                for r in self.rects:
-                    pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
-                    pygame.draw.rect(self.screen, r.color, r.rect)
+            else:
+                if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
+                    for r in self.past_rects:
+                        pygame.draw.rect(self.screen, 'black',
+                                         (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE,
+                                          r.rect.width + self.SQUARE_EDGE_SIZE * 2,
+                                          r.rect.height + self.SQUARE_EDGE_SIZE * 2))
+                        pygame.draw.rect(self.screen, r.color, r.rect)
+                    for r in self.primary_rects:
+                        pygame.draw.rect(self.screen, 'black', r.rect_extend)
+                        pygame.draw.rect(self.screen, r.color, r.rect)
+                    for r in self.rects:
+                        pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
+                        pygame.draw.rect(self.screen, r.color, r.rect)
             self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
 
         elif self.actual_screen == 'loose': # when the player lost the life mode
@@ -477,6 +495,11 @@ class Game:
                 self.past_rects = []
                 self.past_rects.append(
                     Rectangle(self.mosaic_start_x, self.mosaic_start_y, self.SQUARE_SIZE, self.SQUARE_SIZE, color))
+        elif self.gamemode == 'disco':
+            if len(self.past_rects) % self.NUMBER_SQUARE_ROW == 0:
+                self.mosaic_y = self.mosaic_start_y - (self.SQUARE_SIZE + self.SQUARE_EDGE_SIZE*2)*len(self.past_rects)/self.NUMBER_SQUARE_ROW
+                self.mosaic_x = self.mosaic_start_x
+
 
 
 

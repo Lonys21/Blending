@@ -21,13 +21,7 @@ while running:
     for ev in pygame.event.get():
         if ev.type == pygame.QUIT:
             running = False
-        elif ev.type == pygame.KEYDOWN:
-            g.past_rects = []
-            g.mosaic_y = g.mosaic_start_y
-            g.mosaic_x = g.mosaic_start_x
-            for i in range(2):
-                g.start()
-                g.add_square()
+
 
 
 
@@ -42,6 +36,8 @@ while running:
                             g.gamemode = 'life'
                         elif b.name == 'Round_mode':
                             g.gamemode = "score"
+                        elif b.name == "Disco":
+                            g.gamemode = "disco"
                         g.start()
             elif g.actual_screen == 'playing':
                 for r in g.rects:
