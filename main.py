@@ -71,7 +71,10 @@ while running:
                     g.home_button.image = g.home_button.image_idle
             elif g.actual_screen == 'end':
                 if g.additional_round_button.rect.collidepoint(ev.pos):
-                    g.additional_round()
+                    if not g.max_round == g.LAST_ROUND:
+                        g.additional_round()
+                    else:
+                        g.restart('all')
                 elif g.menu_button.rect.collidepoint(ev.pos):
                     g.actual_screen = 'menu'
                     g.reset("all")
@@ -111,9 +114,13 @@ while running:
                     g.home_button.image = g.home_button.image_idle
             elif g.actual_screen == 'end':
                 if g.additional_round_button.rect.collidepoint(ev.pos):
-                    g.additional_round_button.image = g.additional_round_button.image_mouse_on
+                    if not g.max_round == g.LAST_ROUND:
+                        g.additional_round_button.image = g.additional_round_button.image_mouse_on
+                    else:
+                        g.replay_button.image = g.replay_button.image_mouse_on
                 else:
                     g.additional_round_button.image = g.additional_round_button.image_idle
+                    g.replay_button.image = g.replay_button.image_idle
                 if g.menu_button.rect.collidepoint(ev.pos):
                     g.menu_button.image = g.menu_button.image_mouse_on
                 else:

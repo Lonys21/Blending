@@ -83,6 +83,7 @@ class Game:
 
         # Score mode
         self.NUMBER_ROUNDS = 10
+        self.LAST_ROUND = 100
         self.max_round = self.NUMBER_ROUNDS
         self.round = 1
         self.rounds_did = 0
@@ -124,25 +125,24 @@ class Game:
                                       r.rect.height + self.SQUARE_EDGE_SIZE * 2))
                     pygame.draw.rect(self.screen, r.color, r.rect)
             else:
-                if len(self.color1) + len(self.color2) + len(self.blend_color) == 9:
-                    for r in self.past_rects:
-                        pygame.draw.rect(self.screen, 'black',
-                                         (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE,
-                                          r.rect.width + self.SQUARE_EDGE_SIZE * 2,
-                                          r.rect.height + self.SQUARE_EDGE_SIZE * 2))
-                        pygame.draw.rect(self.screen, r.color, r.rect)
-                    for r in self.primary_rects:
-                        pygame.draw.rect(self.screen, 'black', r.rect_extend)
-                        pygame.draw.rect(self.screen, r.color, r.rect)
-                    for r in self.rects:
-                        pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
-                        pygame.draw.rect(self.screen, r.color, r.rect)
+                for r in self.past_rects:
+                    pygame.draw.rect(self.screen, 'black',
+                                     (r.rect.x - self.SQUARE_EDGE_SIZE, r.rect.y - self.SQUARE_EDGE_SIZE,
+                                      r.rect.width + self.SQUARE_EDGE_SIZE * 2,
+                                      r.rect.height + self.SQUARE_EDGE_SIZE * 2))
+                    pygame.draw.rect(self.screen, r.color, r.rect)
+                for r in self.primary_rects:
+                    pygame.draw.rect(self.screen, 'black', r.rect_extend)
+                    pygame.draw.rect(self.screen, r.color, r.rect)
+                for r in self.rects:
+                    pygame.draw.rect(self.screen, 'black', (r.rect.x - 5, r.rect.y - 5, r.rect.width + 10, r.rect.height + 10))
+                    pygame.draw.rect(self.screen, r.color, r.rect)
             self.screen.blit(self.home_button.image, (self.home_button.rect.x, self.home_button.rect.y))
 
-        elif self.actual_screen == 'loose': # when the player lost the life mode
+        elif self.actual_screen == 'loose': # when the player loose the life mode
             self.loose_life_mode()
 
-        elif self.actual_screen == 'end': # when all rounds have been made
+        elif self.actual_screen == 'end': # when all rounds made
             self.end_score_mode()
 
     def reset(self, mode):
@@ -161,6 +161,11 @@ class Game:
             self.square_size = 0
             self.previous_square_size = 0
             self.point = 0
+            self.score_font = pygame.font.SysFont('Arial', 60)
+            self.round_font_x = 650
+            self.round_font_y = 25
+            self.score_font_x = 100
+            self.score_font_y = 50
 
     def start(self):
         self.showed = False
@@ -261,6 +266,8 @@ class Game:
                 i = 0
 
     def update_score_mode(self):
+        if self.round == self.LAST_ROUND:
+            self.round_font_x = 575
         self.screen.blit(self.score_font.render(str(self.round)+'/'+str(self.max_round), True, self.score_font_color), (self.round_font_x, self.round_font_y))
         if self.round == self.max_round + 1:
             self.actual_screen = 'end'
@@ -272,34 +279,14 @@ class Game:
         start_y = 500
         square_area_width = self.screen.get_width() - start_x*2
         square_area_height = self.screen.get_height() - start_y - start_x/2
-        
-        # To rectify
+
         if self.rounds_did == 1:
             square_in_a_row = 5
             self.square_size = square_area_width/square_in_a_row
-        elif self.rounds_did % 3 == 0:
-            square_in_a_row = 15
-            self.square_size = (square_area_width / square_in_a_row)
-            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
-                self.square_size * 3 / self.rounds_did
-        elif self.rounds_did % 2 == 0:
+        elif self.rounds_did == 2:
             square_in_a_row = 10
-            self.square_size = square_area_width/square_in_a_row
-            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
-                if self.rounds_did % 4 == 0:
-                    square_in_a_row = 20
-                    self.square_size = square_area_width/square_in_a_row
-        elif self.rounds_did % 5 == 0:
-            square_in_a_row = 10
-            self.square_size = square_area_height/self.rounds_did
-            #  start_x += (square_area_width-square_in_a_row*self.square_size)/2
-        elif self.rounds_did % 7 == 0:
-            square_in_a_row = 14
-            self.square_size = (square_area_width / square_in_a_row)
-            if self.square_size * (self.rounds_did * 10 / square_in_a_row) > square_area_height:
-                self.square_size * 7 / self.rounds_did
-
-        if self.rounds_did > 2:
+            self.square_size = square_area_width / square_in_a_row
+        elif self.rounds_did > 2:
             square_in_a_row = 10
             if self.rounds_did*10/square_in_a_row*self.previous_square_size > square_area_height:
                 self.square_size = square_area_height / self.rounds_did
@@ -308,22 +295,32 @@ class Game:
                 self.square_size = self.previous_square_size
 
 
-
-
-
         if self.previous_round_rects != self.past_rects:
             self.previous_round_rects += self.past_rects
             self.past_rects = self.previous_round_rects.copy()
 
         self.print_mosaic(start_x, start_y, square_in_a_row, self.square_size, self.previous_round_rects)
-        self.screen.blit(self.score_font.render(f'Well, your score is : {self.point}/{self.max_round}',True, self.score_font_color),
-                         (self.score_font_x, self.score_font_y))
-        self.screen.blit(self.additional_round_button.image, (self.additional_round_button.rect.x, self.additional_round_button.rect.y))
+        if not self.max_round == self.LAST_ROUND:
+            self.screen.blit(self.score_font.render(f'Well, your score is {self.point}/{self.max_round}', True,
+                                                    self.score_font_color),
+                             (self.score_font_x, self.score_font_y))
+            self.screen.blit(self.additional_round_button.image, (self.additional_round_button.rect.x, self.additional_round_button.rect.y))
+        else:
+            self.score_font = pygame.font.SysFont('Arial', 30)
+            self.screen.blit(self.score_font.render(f"Wow you hit the 100 round with a score of {self.point}/{self.max_round}", True,
+                                                    self.score_font_color), (self.score_font_x, self.score_font_y))
+            self.screen.blit(self.replay_button.image,
+                             (self.additional_round_button.rect.x, self.additional_round_button.rect.y))
+
         self.screen.blit(self.menu_button.image, (self.menu_button.rect.x, self.menu_button.rect.y))
 
     def additional_round(self):
         self.max_round += self.NUMBER_ROUNDS
         self.previous_square_size = self.square_size
+        if self.max_round == self.LAST_ROUND:
+            # change the position of the text and enlever the additional round button
+            self.round_font_x = 600
+            self.round_font_y = 25
         self.restart("partial")
 
 
