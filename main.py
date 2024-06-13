@@ -2,7 +2,9 @@ import pygame
 from game import Game
 
 pygame.init()
+icone = pygame.image.load("assets/Blending_icon.png")
 pygame.display.set_caption("Blending")
+pygame.display.set_icon(icone)
 screen = pygame.display.set_mode((800, 800))
 clock = pygame.time.Clock()
 FPS = 60
